@@ -1,7 +1,5 @@
 import type { Config } from "tailwindcss";
 
-// all in fixtures is set to tailwind v3 as interims solutions
-
 const config: Config = {
     darkMode: ["class"],
     content: [
@@ -12,6 +10,11 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+      // Adicionando a nova família de fontes
+      fontFamily: {
+        sans: ['var(--font-inter)'], // Fonte padrão
+        heading: ['var(--font-lilita-one)'], // Nova fonte para títulos
+      },
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
