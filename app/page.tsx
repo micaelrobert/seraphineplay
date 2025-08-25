@@ -10,8 +10,8 @@ import React from "react"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel"
 import Autoplay from "embla-carousel-autoplay"
 import { cn } from "@/lib/utils"
-// Importando os componentes da biblioteca parallax
 import { ParallaxProvider, ParallaxBanner, ParallaxBannerLayer } from 'react-scroll-parallax';
+import styles from "@/app/styles/bubble.module.css";
 
 
 // --- COMPONENTES VISUAIS ---
@@ -63,45 +63,48 @@ const SpringModal = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (isOpe
 };
 
 // Componente para o título com efeito de digitação
-const TextType = ({ text, typingSpeed = 100, pauseDuration = 2000, cursorCharacter = "|" }: { text: string[], typingSpeed?: number, pauseDuration?: number, cursorCharacter?: string }) => {
+const TypingBubbleTitle = ({ texts, typingSpeed = 100, pauseDuration = 2000, cursorCharacter = "|" }: { texts: string[], typingSpeed?: number, pauseDuration?: number, cursorCharacter?: string }) => {
   const [textIndex, setTextIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [currentText, setCurrentText] = useState("");
+  const [displayedText, setDisplayedText] = useState("");
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const handleTyping = () => {
-      const currentString = text[textIndex];
+      const currentString = texts[textIndex];
       if (!currentString) return;
-      
+
       if (!isDeleting && charIndex < currentString.length) {
-        setCurrentText((prev) => prev + currentString[charIndex]);
+        setDisplayedText((prev) => prev + currentString[charIndex]);
         setCharIndex((prev) => prev + 1);
       } else if (!isDeleting && charIndex === currentString.length) {
         timerRef.current = setTimeout(() => setIsDeleting(true), pauseDuration);
       } else if (isDeleting && charIndex > 0) {
-        setCurrentText((prev) => prev.substring(0, prev.length - 1));
+        setDisplayedText((prev) => prev.substring(0, prev.length - 1));
         setCharIndex((prev) => prev - 1);
       } else if (isDeleting && charIndex === 0) {
         setIsDeleting(false);
-        setTextIndex((prev) => (prev + 1) % text.length);
-        setCurrentText("");
+        setTextIndex((prev) => (prev + 1) % texts.length);
       }
     };
 
-    timerRef.current = setTimeout(handleTyping, isDeleting ? typingSpeed / 2 : typingSpeed);
+     timerRef.current = setTimeout(handleTyping, isDeleting ? typingSpeed / 2 : typingSpeed);
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [charIndex, isDeleting, text, textIndex, typingSpeed, pauseDuration]);
+  }, [charIndex, isDeleting, texts, textIndex, typingSpeed, pauseDuration]);
 
   const colors = ["#FF6B6B", "#FFD93D", "#6BCB77", "#4D96FF", "#C77DFF", "#FF8C42"];
 
-  return (
+return (
     <div className="text-5xl md:text-7xl font-bold drop-shadow-sm h-24 md:h-32 flex items-center justify-center flex-wrap font-heading">
-      {currentText.split("").map((char, index) => (
-        <span key={index} style={{ color: colors[index % colors.length] }}>
+      {displayedText.split("").map((char, index) => (
+        <motion.span
+          key={index}
+          style={{ color: colors[index % colors.length] }}
+          className={styles.hoverText} // Aplicando a classe do efeito bubble
+        >
           {char === " " ? "\u00A0" : char}
-        </span>
+        </motion.span>
       ))}
       <motion.span animate={{ opacity: [0, 1, 0] }} transition={{ duration: 0.8, repeat: Infinity }} className="ml-1 text-gray-500">
         {cursorCharacter}
@@ -109,6 +112,7 @@ const TextType = ({ text, typingSpeed = 100, pauseDuration = 2000, cursorCharact
     </div>
   );
 };
+
 
 // Componente para o Card com efeito 3D (Tilt)
 const TiltCard = ({ children, className }: { children: React.ReactNode; className?: string }) => {
@@ -212,30 +216,46 @@ export default function HomePage() {
     <ParallaxProvider>
         <div className="min-h-screen w-full overflow-x-hidden bg-white">
 
-        {/* Header & Hero Section */}
-        <div ref={heroRef} className="relative w-full h-[60vh] md:h-[80vh] bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('/seraphine.png')" }}>
-            <div className="absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent" />
+{/* Header & Hero Section com Parallax */}
+<div ref={heroRef} className="relative w-full h-[60vh] md:h-[70vh]">
+    <ParallaxBanner className="h-full">
+        <ParallaxBannerLayer
+            image="/seraphine.png"
+            speed={-20}
+            className="bg-center bg-cover opacity-90" // Opacidade aplicada aqui
+            style={{ filter: 'blur(3px)' }} // Blur aplicado aqui
+        />
+        <ParallaxBannerLayer>
             <header className="relative z-10 py-12 text-center flex flex-col justify-center h-full">
-            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, ease: "easeOut" }} className="inline-block">
+                <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, ease: "easeOut" }} className="inline-block">
                 <motion.div
-                ref={ballRef}
-                onClick={handleBallClick}
-                style={{ x: ballPosition.x, y: ballPosition.y, cursor: 'pointer', transition: 'transform 0.1s linear' }}
-                animate={{
-                    filter: ["drop-shadow(0 0 10px rgba(255, 255, 255, 0.8))", "drop-shadow(0 0 25px rgba(238, 130, 238, 0.9))", "drop-shadow(0 0 10px rgba(255, 255, 255, 0.8))"],
-                }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="w-32 h-32 md:w-40 md:h-40 mx-auto bg-gradient-to-br from-yellow-300 via-orange-300 to-pink-300 rounded-full flex items-center justify-center shadow-2xl border-8 border-white mb-6"
+                    ref={ballRef}
+                    onClick={handleBallClick}
+                    style={{ x: ballPosition.x, y: ballPosition.y, cursor: 'pointer', transition: 'transform 0.1s linear' }}
+                    animate={{
+                        filter: ["drop-shadow(0 0 10px rgba(255, 255, 255, 0.8))", "drop-shadow(0 0 25px rgba(238, 130, 238, 0.9))", "drop-shadow(0 0 10px rgba(255, 255, 255, 0.8))"],
+                    }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                    className="w-32 h-32 md:w-40 md:h-40 mx-auto bg-gradient-to-br from-yellow-300 via-orange-300 to-pink-300 rounded-full flex items-center justify-center shadow-2xl border-8 border-white mb-6"
                 >
-                <Sparkles className="w-16 h-16 md:w-24 md:h-24 text-white" />
+                    <Sparkles className="w-16 h-16 md:w-24 md:h-24 text-white" />
                 </motion.div>
-            </motion.div>
-            <TextType text={["Seraphineplay", "A Jornada de uma Gênio"]} />
+                </motion.div>
+                <TypingBubbleTitle texts={["Seraphineplay", "A Jornada de uma Gênio"]} />
             </header>
-        </div>
+        </ParallaxBannerLayer>
+    </ParallaxBanner>
+    {/* Divisor SVG Curvo */}
+    <div className="absolute bottom-0 left-0 w-full text-white">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 100" fill="currentColor">
+            <path d="M0,50 C480,150 960,0 1440,50 L1440,100 L0,100 Z"></path>
+        </svg>
+    </div>
+</div>
 
         {/* Age Groups com Tilt Effect */}
-        <section ref={adventureRef} className="px-4 py-16 max-w-7xl mx-auto text-center">
+
+        <section ref={adventureRef} className="px-4 py-16 max-w-7xl mx-auto text-center bg-white relative -mt-1 z-10">
             <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.5 }} transition={{ duration: 0.6, ease: "easeOut" }}>
             <h2 className="text-4xl md:text-5xl font-bold font-heading bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                 Escolha sua aventura mágica
