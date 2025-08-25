@@ -4,12 +4,15 @@ import { useState, useEffect, useRef } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Baby, Gamepad2, Globe, Music, Users, Sparkles, Brain, Beaker, PartyPopper } from "lucide-react"
+import { Baby, Gamepad2, Globe, Music, Users, Sparkles, Brain, Beaker, PartyPopper, PlayCircle } from "lucide-react"
 import Link from "next/link"
 import React from "react"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel"
 import Autoplay from "embla-carousel-autoplay"
 import { cn } from "@/lib/utils"
+// Importando os componentes da biblioteca parallax
+import { ParallaxProvider, ParallaxBanner, ParallaxBannerLayer } from 'react-scroll-parallax';
+
 
 // --- COMPONENTES VISUAIS ---
 
@@ -119,7 +122,7 @@ const TiltCard = ({ children, className }: { children: React.ReactNode; classNam
   };
   const onMouseLeave = () => setRotate({ x: 0, y: 0 });
   return (
-    <motion.div onMouseMove={onMouseMove} onMouseLeave={onMouseLeave} style={{ transform: `perspective(1000px) rotateX(${rotate.x}deg) rotateY(${rotate.y}deg) scale3d(1, 1, 1)`, transition: "all 0.2s cubic-bezier(0.03, 0.98, 0.52, 0.99)"}} className={cn("rounded-2xl shadow-lg transform-style-3d", className)}>
+    <motion.div onMouseMove={onMouseMove} onMouseLeave={onMouseLeave} style={{ transform: `perspective(1000px) rotateX(${rotate.x}deg) rotateY(${rotate.y}deg) scale3d(1, 1, 1)`, transition: "all 0.2s cubic-bezier(0.03, 0.98, 0.52, 0.99)"}} className={cn("rounded-2xl shadow-2xl transform-style-3d", className)}>
       {children}
     </motion.div>
   );
@@ -127,10 +130,10 @@ const TiltCard = ({ children, className }: { children: React.ReactNode; classNam
 
 // --- DADOS ---
 const ageGroups = [
-    { id: "0-2", title: "O Mundo das Descobertas", subtitle: "0-2 anos", icon: Baby, color: "bg-gradient-to-br from-pink-400 to-rose-500", textColor: "text-white", description: "Causa e efeito, estimulação sensorial", emoji: "👶" },
-    { id: "3-5", title: "Exploradores Lógicos", subtitle: "3-5 anos", icon: Gamepad2, color: "bg-gradient-to-br from-blue-400 to-cyan-500", textColor: "text-white", description: "Padrões, classificação, contagem", emoji: "🧩" },
-    { id: "6-8", title: "Mestres dos Desafios", subtitle: "6-8 anos", icon: Brain, color: "bg-gradient-to-br from-green-400 to-emerald-500", textColor: "text-white", description: "Lógica de múltiplos passos", emoji: "🧠" },
-    { id: "9-12", title: "Gênios em Treinamento", subtitle: "9-12 anos", icon: Sparkles, color: "bg-gradient-to-br from-purple-400 to-violet-500", textColor: "text-white", description: "Pensamento abstrato e estratégia", emoji: "⚡" },
+    { id: "0-2", title: "0 a 2 anos",subtitle:"O Mundo das Descobertas", imageUrl: "/2anos.png" },
+    { id: "3-5", title: "3 a 5 anos",subtitle:"Exploradores Lógicos", imageUrl: "/5anos.png" },
+    { id: "6-8", title: "6 a 8 anos",subtitle:"Mestres dos Desafios", imageUrl: "/8anos.png"},
+    { id: "9-12", title: "9 a 12 anos",subtitle:"Gênios em Treinamento", imageUrl: "/12anos.png" },
 ];
 const thematicCategories = [
     { id: "english", title: "Inglês com Seraphine", icon: Globe, color: "bg-gradient-to-br from-orange-400 to-red-500", textColor: "text-white", emoji: "🌍" },
@@ -142,8 +145,8 @@ const thematicCategories = [
 export default function HomePage() {
   const [ballPosition, setBallPosition] = useState({ x: 0, y: 0 });
   const ballRef = useRef<HTMLDivElement>(null);
-  const heroRef = useRef<HTMLDivElement>(null); // Ref para a seção Hero
-  const adventureRef = useRef<HTMLElement>(null); // Ref para a seção de Aventura Mágica
+  const heroRef = useRef<HTMLDivElement>(null); 
+  const adventureRef = useRef<HTMLElement>(null);
   const [isHovering, setIsHovering] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -174,25 +177,16 @@ export default function HomePage() {
         newX += directionX * speed;
         newY += directionY * speed;
         
-        // Limites da área da bola
-        const ballAreaTop = heroRect.top;
-        const ballAreaBottom = adventureRect.top - ballRect.height;
-        
-        // Posição Y da bola em relação à janela
+        const topLimit = heroRect.top;
+        const bottomLimit = adventureRect.top - ballRect.height;
         const currentBallY = ballRect.top + newY - ballPosition.y;
 
-        // Verifica se a nova posição Y está fora dos limites
-        if (currentBallY < ballAreaTop) {
-          newY = ballPosition.y + (ballAreaTop - ballRect.top);
-        }
-        if (currentBallY > ballAreaBottom) {
-          newY = ballPosition.y + (ballAreaBottom - ballRect.top);
-        }
+        if (currentBallY < topLimit) newY = ballPosition.y + (topLimit - ballRect.top);
+        if (currentBallY > bottomLimit) newY = ballPosition.y + (bottomLimit - ballRect.top);
         
         setBallPosition({ x: newX, y: newY });
       } else {
         setIsHovering(false);
-        // Retorna suavemente à posição original
         setBallPosition(prev => ({ x: prev.x * 0.9, y: prev.y * 0.9 }));
       }
     };
@@ -210,126 +204,154 @@ export default function HomePage() {
   useEffect(() => {
     if (!api) return;
     setCurrent(api.selectedScrollSnap() + 1);
-    api.on("select", () => {
-      setCurrent(api.selectedScrollSnap() + 1);
-    });
+    api.on("select", () => { setCurrent(api.selectedScrollSnap() + 1); });
   }, [api]);
 
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-white">
+    <ParallaxProvider>
+        <div className="min-h-screen w-full overflow-x-hidden bg-white">
 
-      {/* Header & Hero Section */}
-      <div ref={heroRef} className="relative w-full h-[60vh] md:h-[80vh] bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('/seraphine.png')" }}>
-        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent" />
-        <header className="relative z-10 py-12 text-center flex flex-col justify-center h-full">
-          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, ease: "easeOut" }} className="inline-block">
-            <motion.div
-              ref={ballRef}
-              onClick={handleBallClick}
-              style={{ x: ballPosition.x, y: ballPosition.y, cursor: 'pointer', transition: 'transform 0.1s linear' }}
-              animate={{
-                filter: ["drop-shadow(0 0 10px rgba(255, 255, 255, 0.8))", "drop-shadow(0 0 25px rgba(238, 130, 238, 0.9))", "drop-shadow(0 0 10px rgba(255, 255, 255, 0.8))"],
-              }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="w-32 h-32 md:w-40 md:h-40 mx-auto bg-gradient-to-br from-yellow-300 via-orange-300 to-pink-300 rounded-full flex items-center justify-center shadow-2xl border-8 border-white mb-6"
-            >
-              <Sparkles className="w-16 h-16 md:w-24 md:h-24 text-white" />
+        {/* Header & Hero Section */}
+        <div ref={heroRef} className="relative w-full h-[60vh] md:h-[80vh] bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('/seraphine.png')" }}>
+            <div className="absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent" />
+            <header className="relative z-10 py-12 text-center flex flex-col justify-center h-full">
+            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, ease: "easeOut" }} className="inline-block">
+                <motion.div
+                ref={ballRef}
+                onClick={handleBallClick}
+                style={{ x: ballPosition.x, y: ballPosition.y, cursor: 'pointer', transition: 'transform 0.1s linear' }}
+                animate={{
+                    filter: ["drop-shadow(0 0 10px rgba(255, 255, 255, 0.8))", "drop-shadow(0 0 25px rgba(238, 130, 238, 0.9))", "drop-shadow(0 0 10px rgba(255, 255, 255, 0.8))"],
+                }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="w-32 h-32 md:w-40 md:h-40 mx-auto bg-gradient-to-br from-yellow-300 via-orange-300 to-pink-300 rounded-full flex items-center justify-center shadow-2xl border-8 border-white mb-6"
+                >
+                <Sparkles className="w-16 h-16 md:w-24 md:h-24 text-white" />
+                </motion.div>
             </motion.div>
-          </motion.div>
-
-          <TextType
-            text={["Seraphineplay", "A Jornada de uma Gênio"]}
-            typingSpeed={100}
-            pauseDuration={2000}
-            cursorCharacter="|"
-          />
-        </header>
-      </div>
-
-      {/* Age Groups */}
-      <section ref={adventureRef} className="px-4 py-12 max-w-7xl mx-auto -mt-24 relative z-10">
-        <motion.h3 className="text-3xl md:text-4xl font-bold text-center bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-12" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 1.0 }}>
-          🎯 Escolha sua Aventura Mágica 🎯
-        </motion.h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {ageGroups.map((group, index) => (
-            <motion.div key={group.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2 + index * 0.15 }}>
-              <Link href={`/age/${group.id}`} passHref>
-                <TiltCard className={`${group.color}`}>
-                  <div className="p-8 text-center text-white relative overflow-hidden rounded-2xl">
-                    <div className="absolute -top-4 -right-4 text-8xl opacity-20 transform rotate-12">{group.emoji}</div>
-                    <div className="relative z-10">
-                      <h4 className="text-xl font-bold mb-2">{group.title}</h4>
-                      <p className="text-sm font-medium mb-3 opacity-90">{group.subtitle}</p>
-                      <p className="text-xs font-light opacity-80 h-10">{group.description}</p>
-                      <div className="mt-4 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 text-white font-bold text-sm inline-block">✨ Explorar ✨</div>
-                    </div>
-                  </div>
-                </TiltCard>
-              </Link>
-            </motion.div>
-          ))}
+            <TextType text={["Seraphineplay", "A Jornada de uma Gênio"]} />
+            </header>
         </div>
-      </section>
 
-      {/* Thematic Categories Carousel */}
-      <section className="py-12 relative overflow-hidden">
-         <motion.h3 className="text-3xl md:text-4xl font-bold text-center bg-gradient-to-r from-green-600 to-purple-600 bg-clip-text text-transparent mb-12" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 1.8 }}>
-          🌟 Categorias Especiais 🌟
-        </motion.h3>
-        
-        <Carousel
-            setApi={setApi}
-            plugins={[autoplayPlugin.current]}
-            className="w-full max-w-6xl mx-auto"
-            opts={{ align: "center", loop: true }}
-        >
-            <CarouselContent className="-ml-4">
-                {thematicCategories.map((category, index) => (
-                    <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
-                        <div className="p-1">
-                            <motion.div
-                                animate={{
-                                    scale: index + 1 === current ? 1 : 0.9,
-                                    opacity: index + 1 === current ? 1 : 0.6
-                                }}
-                                transition={{ duration: 0.5, ease: "easeInOut" }}
-                            >
-                                <Link href={`/category/${category.id}`}>
-                                    <Card className={`${category.color} border-0 cursor-pointer transition-all duration-300 hover:shadow-xl group h-full`}>
-                                        <CardContent className="p-8 text-center flex flex-col items-center justify-center aspect-square">
-                                            <motion.div whileHover={{ scale: 1.1, rotate: 5 }} className="text-6xl mb-4">{category.emoji}</motion.div>
-                                            <category.icon className={`w-8 h-8 ${category.textColor} mx-auto mb-4 opacity-80`} />
-                                            <h4 className={`text-xl font-bold ${category.textColor}`}>{category.title}</h4>
-                                            <div className="mt-4 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 text-white font-bold text-sm">🎮 Jogar Agora 🎮</div>
-                                        </CardContent>
-                                    </Card>
-                                </Link>
-                            </motion.div>
+        {/* Age Groups com Tilt Effect */}
+        <section ref={adventureRef} className="px-4 py-16 max-w-7xl mx-auto text-center">
+            <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.5 }} transition={{ duration: 0.6, ease: "easeOut" }}>
+            <h2 className="text-4xl md:text-5xl font-bold font-heading bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                Escolha sua aventura mágica
+            </h2>
+            <div className="mt-4 max-w-2xl mx-auto">
+                <p className="text-lg text-muted-foreground">
+                Cada fase é um novo desafio, criado para desenvolver habilidades enquanto a diversão acontece.
+                </p>
+                <motion.div className="mt-2 h-1 bg-gradient-to-r from-purple-500 to-blue-500 mx-auto" initial={{ scaleX: 0, originX: 0 }} whileInView={{ scaleX: 1 }} viewport={{ once: true, amount: 0.5 }} transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }} style={{ width: "150px" }}/>
+            </div>
+            </motion.div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12">
+            {ageGroups.map((group, index) => (
+                <motion.div key={group.id} initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.6, ease: "easeOut", delay: index * 0.15 }}>
+                <TiltCard>
+                    <Link href={`/age/${group.id}`} className="block rounded-2xl overflow-hidden group relative h-96">
+                        <div className="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-500 ease-in-out group-hover:scale-110" style={{ backgroundImage: `url(${group.imageUrl})` }} />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                        <div className="relative h-full flex flex-col justify-between items-center text-white p-6 text-center">
+                        <div className="flex flex-col items-center">
+                            <h4 className="text-xl font-semibold drop-shadow-md">{group.subtitle}</h4>
+                            <h3 className="text-3xl font-bold font-heading drop-shadow-md">{group.title}</h3>
                         </div>
-                    </CarouselItem>
-                ))}
-            </CarouselContent>
-            <CarouselPrevious className="hidden md:flex" />
-            <CarouselNext className="hidden md:flex" />
-        </Carousel>
-      </section>
-      
-      {/* Parents Section */}
-      <section className="px-4 py-16 text-center">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 2.0 }}>
-          <Link href="/parents">
-            <Button size="lg" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-xl px-10 py-6 shadow-xl rounded-full transform hover:scale-105 transition-transform">
-              <Users className="w-6 h-6 mr-3" />
-              Informações para os Pais
-            </Button>
-          </Link>
-        </motion.div>
-      </section>
+                        <Button size="lg" className="bg-white/20 backdrop-blur-sm text-white border-white/30 border hover:bg-white/30 rounded-full transition-all duration-300 group-hover:scale-110">
+                            <PlayCircle className="mr-2 h-5 w-5" />
+                            Jogar Agora
+                        </Button>
+                        </div>
+                    </Link>
+                </TiltCard>
+                </motion.div>
+            ))}
+            </div>
+        </section>
+        
+        {/* SEÇÃO PARALLAX ATUALIZADA */}
+        <motion.section
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="relative h-[47vh]"
+        >
+            <ParallaxBanner className="h-[47vh]">
+                <ParallaxBannerLayer image="background2.png" speed={-20} />
+                <ParallaxBannerLayer className="absolute inset-0 bg-black/50" />
+                <ParallaxBannerLayer className="absolute inset-0 flex items-center justify-center">
+                    <motion.div 
+                        initial={{ opacity: 0, y: 50 }} 
+                        whileInView={{ opacity: 1, y: 0 }} 
+                        viewport={{ once: true, amount: 0.5 }} 
+                        transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+                        className="text-center text-white p-4"
+                    >
+                        <h2 className="text-4xl md:text-6xl font-heading font-bold drop-shadow-lg">
+                            Um Universo de Descobertas
+                        </h2>
+                        <p className="mt-4 text-lg md:text-xl font-heading  max-w-3xl drop-shadow-lg">
+                            Explore, desfrute, questione, desenvolva, evolua.
+                        </p>
+                    </motion.div>
+                </ParallaxBannerLayer>
+            </ParallaxBanner>
+            {/* Divs para o efeito de blur/camuflagem */}
+            <div className="absolute top-0 left-0 w-full h-8 bg-gradient-to-b from-white to-transparent" />
+            <div className="absolute bottom-0 left-0 w-full h-8 bg-gradient-to-t from-white to-transparent" />
+        </motion.section>
 
-      {/* Renderiza o modal */}
-      <SpringModal isOpen={isModalOpen} setIsOpen={setIsModalOpen} />
-    </div>
+        {/* Thematic Categories Carousel */}
+        <section className="py-16 relative bg-white">
+            <motion.h3 className="text-3xl md:text-4xl font-bold text-center bg-gradient-to-r from-green-600 to-purple-600 bg-clip-text text-transparent mb-12" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.5 }} transition={{ duration: 0.5, delay: 0.2 }}>
+            🌟 Categorias Especiais 🌟
+            </motion.h3>
+            
+            <Carousel setApi={setApi} plugins={[autoplayPlugin.current]} className="w-full max-w-6xl mx-auto" opts={{ align: "center", loop: true }}>
+                <CarouselContent className="-ml-4">
+                    {thematicCategories.map((category, index) => (
+                        <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                            <div className="p-1">
+                                <motion.div animate={{ scale: index + 1 === current ? 1 : 0.9, opacity: index + 1 === current ? 1 : 0.6 }} transition={{ duration: 0.5, ease: "easeInOut" }}>
+                                    <Link href={`/category/${category.id}`}>
+                                        <Card className={`${category.color} border-0 cursor-pointer transition-all duration-300 hover:shadow-xl group h-full`}>
+                                            <CardContent className="p-8 text-center flex flex-col items-center justify-center aspect-square">
+                                                <motion.div whileHover={{ scale: 1.1, rotate: 5 }} className="text-6xl mb-4">{category.emoji}</motion.div>
+                                                <category.icon className={`w-8 h-8 ${category.textColor} mx-auto mb-4 opacity-80`} />
+                                                <h4 className={`text-xl font-bold ${category.textColor}`}>{category.title}</h4>
+                                                <div className="mt-4 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 text-white font-bold text-sm">🎮 Jogar Agora 🎮</div>
+                                            </CardContent>
+                                        </Card>
+                                    </Link>
+                                </motion.div>
+                            </div>
+                        </CarouselItem>
+                    ))}
+                </CarouselContent>
+                <CarouselPrevious className="hidden md:flex" />
+                <CarouselNext className="hidden md:flex" />
+            </Carousel>
+        </section>
+        
+        {/* Parents Section */}
+        <section className="px-4 py-16 text-center bg-white">
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.5 }} transition={{ duration: 0.5, delay: 0.2 }}>
+            <Link href="/parents">
+                <Button size="lg" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-xl px-10 py-6 shadow-xl rounded-full transform hover:scale-105 transition-transform">
+                <Users className="w-6 h-6 mr-3" />
+                Informações para os Pais
+                </Button>
+            </Link>
+            </motion.div>
+        </section>
+
+        {/* Renderiza o modal */}
+        <SpringModal isOpen={isModalOpen} setIsOpen={setIsModalOpen} />
+        </div>
+    </ParallaxProvider>
   )
 }
